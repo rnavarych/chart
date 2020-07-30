@@ -1,15 +1,14 @@
 import React from 'react';
-import {View, Text} from 'react-native';
-import {DIRECTION_LEFT, DIRECTION_RIGHT, OFFSET} from '../../constants/charConst';
+import {View, Text, Platform} from 'react-native';
+import {DIRECTION_LEFT, DIRECTION_RIGHT, ERROR_COEFFICIENT, OFFSET} from '../../constants/charConst';
 import styles from './styles';
-import {mockValues, mockValues2} from '../../utils/mock';
+import {mockValues} from '../../utils/mock';
 import GradientChart from '../../components/gradientChar';
 import BottomChartModal from '../../components/bottomChartModal';
 
 function ChartContainer(props) {
   const {} = props;
   const [char, setChar] = React.useState(null);
-  const [dateRange, setDateRange] = React.useState('');
   const [selectedX, setSelectedX] = React.useState(null);
   const [data, setData] = React.useState(mockValues);
   const [page, setPage] = React.useState(1);
@@ -26,19 +25,37 @@ function ChartContainer(props) {
     }
   }, [char]);
 
+  const leftPagination = () => {
+    setData([...mockValues, ...data]);
+    setPage(page + 1);
+    setDirection(DIRECTION_LEFT);
+  };
+
+  const rightPagination = () => {
+    setData([...data, ...mockValues]);
+    setPage(page + 1);
+    setDirection(DIRECTION_RIGHT);
+  }
+
   const onChange = ({nativeEvent}) => {
     const {
       right, /*visible chart right X value*/
       left, /*visible chart left X value*/
     } = nativeEvent;
-    if (left >= OFFSET-0.2 && left <= OFFSET+0.2) {
-      setData([...mockValues2, ...data]);
-      setPage(page + 1);
-      setDirection(DIRECTION_LEFT);
-    } else if (right <= data.length && right >= data.length) {
-      setData([...data, ...mockValues2]);
-      setPage(page + 1);
-      setDirection(DIRECTION_RIGHT);
+    if (Platform.OS === 'android') {
+      if (nativeEvent.action === "chartGestureEnd") {
+        if (left <= OFFSET) {
+          leftPagination()
+        }else if (right >= data.length + OFFSET) {
+          rightPagination()
+        }
+      }
+    } else {
+      if (left >= OFFSET - ERROR_COEFFICIENT && left <= OFFSET + ERROR_COEFFICIENT) {
+        leftPagination()
+      } else if (right >= data.length + OFFSET - ERROR_COEFFICIENT) {
+        rightPagination()
+      }
     }
   };
 
@@ -47,11 +64,12 @@ function ChartContainer(props) {
       <Text style={ {
         alignSelf: 'center',
         marginVertical: 10,
-      } }>{ dateRange }</Text>
+      } }>{ "" }</Text>
       <GradientChart
         containerStyle={ styles.chartContainer }
         data={ data }
-        charRef={ setChar }
+        setRef={ setChar }
+        charRef={ char }
         handleSelect={ handleSelect }
         onChange={ onChange }
         page={ page }

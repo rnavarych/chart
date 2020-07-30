@@ -12,7 +12,7 @@ index 7279dee..cb8377d 100644
  
  end
 diff --git a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
-index 81b7654..716048c 100644
+index 81b7654..0085c63 100644
 --- a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
 +++ b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
 @@ -8,8 +8,17 @@ import com.github.wuxudong.rncharts.data.DataExtract;
@@ -33,7 +33,7 @@ index 81b7654..716048c 100644
  
      @Override
      public String getName() {
-@@ -18,12 +27,52 @@ public class LineChartManager extends BarLineChartBaseManager<LineChart, Entry>
+@@ -18,12 +27,50 @@ public class LineChartManager extends BarLineChartBaseManager<LineChart, Entry>
  
      @Override
      protected LineChart createViewInstance(ThemedReactContext reactContext) {
@@ -56,17 +56,15 @@ index 81b7654..716048c 100644
 +
 +        int[] colors = {
 +            Color.parseColor("#f54336"),
-+            Color.parseColor("#feeb39"),
-+            Color.parseColor("#feeb39"),
 +            Color.parseColor("#8bc34a"),
-+            Color.parseColor("#8bc34a"),
++            Color.parseColor("#feeb39"),
++            Color.parseColor("#f54336"),
 +            Color.parseColor("#f54336"),
 +        };
 +        float[] positions = {
 +            0.0f,
-+            0.3f,
-+            0.4f,
-+            0.44f,
++            0.23f,
++            0.6f,
 +            0.8f,
 +            1.0f
 +        };
@@ -86,6 +84,41 @@ index 81b7654..716048c 100644
      @Override
      DataExtract getDataExtract() {
          return new LineDataExtract();
+diff --git a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
+index 58f89d3..658295b 100644
+--- a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
++++ b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
+@@ -43,14 +43,17 @@ public class RNOnChartGestureListener implements OnChartGestureListener {
+ 
+     @Override
+     public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
++        sendEvent("chartGestureStart", me);
+     }
+ 
+     @Override
+     public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
++        sendEvent("chartGestureEnd", me);
+     }
+ 
+     @Override
+     public void onChartLongPressed(MotionEvent me) {
++        sendEvent("chartLongPress", me);
+     }
+ 
+     @Override
+@@ -60,10 +63,12 @@ public class RNOnChartGestureListener implements OnChartGestureListener {
+ 
+     @Override
+     public void onChartSingleTapped(MotionEvent me) {
++        sendEvent("chartSingleTap", me);
+     }
+ 
+     @Override
+     public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
++        sendEvent("chartFling", me1);
+     }
+ 
+     @Override
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/ReactNativeCharts.iml b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/ReactNativeCharts.iml
 new file mode 100644
 index 0000000..24643cc
@@ -266,7 +299,7 @@ index 01b5898..a134ba2 100644
  protocol RNBarLineChartBaseManager {
    var _bridge : RCTBridge? {get}
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
-index 77e454f..5faa54d 100644
+index 77e454f..e7f2527 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
 +++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
 @@ -4,7 +4,7 @@
@@ -286,8 +319,16 @@ index 77e454f..5faa54d 100644
      func setMaxHighlightDistance(_  maxHighlightDistance: CGFloat) {
          barLineChart.maxHighlightDistance = maxHighlightDistance;
      }
+@@ -230,6 +229,7 @@ class RNBarLineChartViewBase: RNYAxisChartViewBase {
+         if let config = savedVisibleRange {
+             updateVisibleRange(config)
+         }
++        gradient(heightGradient!)
+         barLineChart.notifyDataSetChanged()        
+     }
+ 
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
-index ef7c739..df8efc3 100644
+index ef7c739..02da954 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
 +++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
 @@ -12,6 +12,7 @@
@@ -299,7 +340,7 @@ index ef7c739..df8efc3 100644
  RCT_EXPORT_VIEW_PROPERTY(chartBackgroundColor, NSInteger) \
  RCT_EXPORT_VIEW_PROPERTY(chartDescription, NSDictionary) \
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
-index 3035d92..1cc7fcd 100644
+index 3035d92..8cdf39b 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
 +++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
 @@ -7,10 +7,47 @@
@@ -321,7 +362,7 @@ index 3035d92..1cc7fcd 100644
 +            let scanner = Scanner(string: hexColor)
 +            var hexNumber: UInt64 = 0
 +            if hexColor.count == 8 {
-+                
++
 +
 +                if scanner.scanHexInt64(&hexNumber) {
 +                    r = CGFloat((hexNumber & 0xff000000) >> 24) / 255
@@ -352,31 +393,43 @@ index 3035d92..1cc7fcd 100644
  @objcMembers
  open class RNChartViewBase: UIView, ChartViewDelegate {
 @@ -26,6 +63,9 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
- 
+     
      private  var syncY = false
      
-+    
++
 +    var heightGradient : Int?
 +
      override open func reactSetFrame(_ frame: CGRect)
      {
          super.reactSetFrame(frame);
-@@ -48,6 +88,15 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
-         chart.data = dataExtract.extract(json)
+@@ -42,10 +82,26 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
+         fatalError("subclass should override this function.")
      }
      
-+    func setHeightGradient(_ heightGradient: Int) {
++    func gradient(_ heightGradient: Int) {
 +        let dataSet = chart.data?.dataSets[0] as! LineChartDataSet;
 +        dataSet.isDrawLineWithGradientEnabled = true
 +        dataSet.lineDashLengths = nil
 +        dataSet.highlightLineDashLengths = nil
 +        dataSet.setColors(UIColor(hex:"#f54336")!, UIColor(hex:"#8bc34a")!, UIColor(hex:"#feeb39")!, UIColor(hex:"#f54336")!)
-+        dataSet.gradientPositions = [0, CGFloat(heightGradient*30/100), CGFloat(heightGradient*70/100), CGFloat(heightGradient*85/100)]
++        dataSet.gradientPositions = [0, CGFloat(heightGradient*23/100), CGFloat(heightGradient*60/100), CGFloat(heightGradient*80/100)]
 +    }
 +
+     func setData(_ data: NSDictionary) {
+         let json = BridgeUtils.toJson(data)
+-        
+         chart.data = dataExtract.extract(json)
++        if heightGradient != nil {
++            gradient(heightGradient!)
++        }
++    }
++
++    func setHeightGradient(_ heightGradient: Int) {
++        self.heightGradient = heightGradient
++        gradient(heightGradient)
+     }
+     
      func setLegend(_ config: NSDictionary) {
-         let json = BridgeUtils.toJson(config)
- 
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift
 index 1774365..1f32665 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift
@@ -560,7 +613,7 @@ index ff3aff3..977bb8c 100644
  class LineDataExtract : DataExtract {
      override func createData() -> ChartData {
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
-index 3cb1160..3a6a371 100644
+index 3cb1160..2692503 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
 +++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
 @@ -50,4 +50,6 @@ open class RNLineChartManager: RCTViewManager, RNBarLineChartBaseManager {

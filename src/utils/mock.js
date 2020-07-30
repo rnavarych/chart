@@ -5,7 +5,7 @@ export const mockValues = [
     date: new Date(2020, 6, 22)
   },
   {
-    value: 120,
+    value: 290,
     time: '2 PM',
     date: new Date(2020, 6, 22)
   },
@@ -25,7 +25,7 @@ export const mockValues = [
     date: new Date(2020, 6, 23)
   },
   {
-    value: 132,
+    value: 0,
     time: '6 PM',
     date: new Date(2020, 6, 23)
   },
@@ -138,46 +138,6 @@ export const mockValues2 = [
     time: '6 PM',
     date: new Date(2020, 6, 29)
   },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 1,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  }
 ]
 
 export const mockValues3 = [
@@ -196,54 +156,5 @@ export const mockValues3 = [
     time: '6 PM',
     date: new Date(2020, 6, 29)
   },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  },
-  {
-    value: 100,
-    time: '6 PM',
-    date: new Date(2020, 6, 29)
-  }
+
 ]

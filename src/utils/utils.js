@@ -1,4 +1,5 @@
 import {DIRECTION_LEFT, OFFSET} from '../constants/charConst';
+import {Platform} from 'react-native'
 
 //return array = [{x: number, y: number}]
 export function generateCharValues(data) {
@@ -19,7 +20,7 @@ export const zoom = (data, page, direction) => {
   }
   let centerX = 3 + OFFSET;
   let listSizeBeforePaginationLeft = data.length - beforeData.length + centerX;
-  let xValue = direction === DIRECTION_LEFT ? listSizeBeforePaginationLeft : beforeData.length;
+  let xValue = direction === DIRECTION_LEFT ? listSizeBeforePaginationLeft : beforeData.length-2.5;
   beforeData = data;
   return ({scaleX: data.length / 6, scaleY: 0, xValue, yValue: 0});
 };

@@ -12,8 +12,6 @@ function BottomChartModal(props) {
 
   React.useEffect(() => {
     if (!!scrollToIndex && !modalVisible) {
-      console.log(scrollToIndex-1)
-      console.log(content)
       flatList.current.scrollToIndex({animated: true, index: scrollToIndex-1})
     }
   }, [scrollToIndex]);
@@ -46,6 +44,7 @@ function BottomChartModal(props) {
         <View style={ styles.modalButtonLine }/>
       </TouchableOpacity>
       <FlatList
+        extraData={content}
         refreshing={true}
         onScrollToIndexFailed={console.log}
         ref={flatList}

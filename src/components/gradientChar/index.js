@@ -1,15 +1,34 @@
 import React from 'react';
-import {processColor, Text, View} from 'react-native';
+import {processColor, Platform, View} from 'react-native';
 import styles from './styles';
 import {LineChart} from 'react-native-charts-wrapper';
-import {MAX_Y, MIN_Y, OFFSET} from '../../constants/charConst';
+import {MAX_Y, OFFSET} from '../../constants/charConst';
 import {generateAxisValues, generateCharValues, zoom} from '../../utils/utils';
+import {mockValues} from '../../utils/mock';
 
 
 function GradientChart(props) {
-  const {data, handleSelect, onChange, charRef, containerStyle, page, direction} = props;
+  const {data, handleSelect, onChange, setRef, charRef, containerStyle, page, direction} = props;
 
-  const chartData =  ({
+  React.useEffect(() => {
+    if (!!charRef) {
+      console.log(generateCharValues(data));
+      charRef.setDataAndLockIndex({
+        dataSets: [{
+          values: generateCharValues(data),
+          label: '',
+          config: {
+            mode: 'HORIZONTAL_BEZIER',
+            drawValues: false,
+            drawCircles: false,
+            lineWidth: 2,
+          },
+        }],
+      })
+    }
+  }, [data])
+
+  const chartData = ({
     dataSets: [{
       values: generateCharValues(data),
       label: '',
@@ -30,40 +49,52 @@ function GradientChart(props) {
     textSize: 10,
     fontWeight: 'bold',
     valueFormatter: generateAxisValues(data, true),
+    drawGridLines: false,
   };
 
   const yAxis = {
     left: {
-      enabled: false
+      enabled: false,
     },
     right: {
+      enabled: true,
       drawAxisLine: false,
-      axisMinimum: MIN_Y,
-      axisMaximum: MAX_Y,
       labelCount: 7,
-      labelCountForce: true,
-      granularityEnabled: true,
-      granularity: 1,
+      drawGridLines: true,
+      gridColor: processColor('#ddddddf3'),
+      drawLimitLinesBehindData: true,
     },
   };
 
   const marker = {
     enabled: true,
-    markerColor: processColor("white"),
-    textColor: processColor("black")
-  }
+    markerColor: processColor('white'),
+    textColor: processColor('black'),
+  };
 
   return (
     <View style={ containerStyle }>
       <LineChart
-        maxVisibleValueCount={6}
+        visibleRange={ {x: {min: 6, max: 6}} }
+        maxVisibleValueCount={ 6 }
         marker={ marker }
-        ref={ charRef }
+        ref={ setRef }
         xAxis={ xAxis }
         yAxis={ yAxis }
         heightGradient={ MAX_Y }
         style={ styles.chart }
-        data={ chartData }
+        data={ {
+          dataSets: [{
+            values: generateCharValues(mockValues),
+            label: '',
+            config: {
+              mode: 'HORIZONTAL_BEZIER',
+              drawValues: false,
+              drawCircles: false,
+              lineWidth: 2,
+            },
+          }],
+        } }
         touchEnabled={ true }
         dragEnabled={ true }
         scaleEnabled={ false }
@@ -71,9 +102,11 @@ function GradientChart(props) {
         scaleYEnabled={ false }
         pinchZoom={ false }
         chartDescription={ {text: ''} }
-        zoom={ zoom(data, page, direction) }
         onSelect={ handleSelect }
         onChange={ onChange }
+        zoom={ zoom(data, page, direction) }
+        dragDecelerationEnabled={Platform.OS === 'ios'}
+        dragDecelerationFrictionCoef={Platform.OS === 'ios' ? 0.9 : 0.9}
         legend={ {
           enabled: false,
         } }
@@ -82,4 +115,5 @@ function GradientChart(props) {
   );
 }
 
+//
 export default GradientChart;
