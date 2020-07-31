@@ -5,16 +5,9 @@ import ModalItem from '../modalItem';
 import ModalDateItem from '../modalDateItem';
 
 function BottomChartModal(props) {
-  const flatList = React.useRef(null);
-  const {modalHeight = 200, duration = 500, content, scrollToIndex} = props;
+  const {modalHeight = 200, duration = 500, content, scrollToIndex, listRef} = props;
   const [modalY] = React.useState(new Animated.Value(modalHeight));
   const [modalVisible, setModalVisible] = React.useState(true);
-
-  React.useEffect(() => {
-    if (!!scrollToIndex && !modalVisible) {
-      flatList.current.scrollToIndex({animated: true, index: scrollToIndex-1})
-    }
-  }, [scrollToIndex]);
 
   const openModal = React.useCallback(() => {
     Animated.timing(modalY, {
@@ -44,10 +37,8 @@ function BottomChartModal(props) {
         <View style={ styles.modalButtonLine }/>
       </TouchableOpacity>
       <FlatList
-        extraData={content}
-        refreshing={true}
         onScrollToIndexFailed={console.log}
-        ref={flatList}
+        ref={listRef}
         data={!modalVisible ? content : null}
         keyExtractor={ (i, index) => String(index) }
         showsVerticalScrollIndicator={ false }

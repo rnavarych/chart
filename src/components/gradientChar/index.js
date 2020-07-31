@@ -11,8 +11,7 @@ function GradientChart(props) {
   const {data, handleSelect, onChange, setRef, charRef, containerStyle, page, direction} = props;
 
   React.useEffect(() => {
-    if (!!charRef) {
-      console.log(generateCharValues(data));
+    if (!!charRef && Platform.OS === 'android') {
       charRef.setDataAndLockIndex({
         dataSets: [{
           values: generateCharValues(data),
@@ -26,7 +25,7 @@ function GradientChart(props) {
         }],
       })
     }
-  }, [data])
+  }, [data]);
 
   const chartData = ({
     dataSets: [{
@@ -83,7 +82,7 @@ function GradientChart(props) {
         yAxis={ yAxis }
         heightGradient={ MAX_Y }
         style={ styles.chart }
-        data={ {
+        data={ Platform.OS === 'ios' ? chartData : {
           dataSets: [{
             values: generateCharValues(mockValues),
             label: '',

@@ -340,7 +340,7 @@ index ef7c739..02da954 100644
  RCT_EXPORT_VIEW_PROPERTY(chartBackgroundColor, NSInteger) \
  RCT_EXPORT_VIEW_PROPERTY(chartDescription, NSDictionary) \
 diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
-index 3035d92..8cdf39b 100644
+index 3035d92..baa95f9 100644
 --- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
 +++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
 @@ -7,10 +7,47 @@
@@ -407,12 +407,12 @@ index 3035d92..8cdf39b 100644
      }
      
 +    func gradient(_ heightGradient: Int) {
-+        let dataSet = chart.data?.dataSets[0] as! LineChartDataSet;
-+        dataSet.isDrawLineWithGradientEnabled = true
-+        dataSet.lineDashLengths = nil
-+        dataSet.highlightLineDashLengths = nil
-+        dataSet.setColors(UIColor(hex:"#f54336")!, UIColor(hex:"#8bc34a")!, UIColor(hex:"#feeb39")!, UIColor(hex:"#f54336")!)
-+        dataSet.gradientPositions = [0, CGFloat(heightGradient*23/100), CGFloat(heightGradient*60/100), CGFloat(heightGradient*80/100)]
++        let dataSet = chart.data?.dataSets[0] as? LineChartDataSet;
++        dataSet?.isDrawLineWithGradientEnabled = true
++        dataSet?.lineDashLengths = nil
++        dataSet?.highlightLineDashLengths = nil
++        dataSet?.setColors(UIColor(hex:"#f54336")!, UIColor(hex:"#8bc34a")!, UIColor(hex:"#feeb39")!, UIColor(hex:"#f54336")!)
++        dataSet?.gradientPositions = [0, CGFloat(heightGradient*23/100), CGFloat(heightGradient*60/100), CGFloat(heightGradient*80/100)]
 +    }
 +
      func setData(_ data: NSDictionary) {
