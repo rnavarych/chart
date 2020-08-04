@@ -2,76 +2,128 @@ import React from 'react';
 import {View, Text, Platform, TouchableOpacity} from 'react-native';
 import {DIRECTION_LEFT, DIRECTION_RIGHT, ERROR_COEFFICIENT, OFFSET} from '../../constants/charConst';
 import styles from './styles';
-import {mockValues, mockValues1, mockValues2, mockValues3} from '../../utils/mock';
+import {mockBloodGlucose} from '../../utils/mock';
 import GradientChart from '../../components/gradientChar';
 import BottomChartModal from '../../components/bottomChartModal';
+import {dataByWeek, descriptionDate} from '../../utils/utils';
+import ChartDateSwitcher from '../../components/chartDateSwithcher';
 
+/**
+ * bloodGlucose - list of values (change to props.data mb)
+ * */
 function ChartContainer(props) {
   const {} = props;
   const [char, setChar] = React.useState(null);
   const [listRef, setListRef] = React.useState(null);
-  const [data, setData] = React.useState(mockValues);
   const [page, setPage] = React.useState(1);
   const [direction, setDirection] = React.useState('left');
+
+  const dateByWeek = React.useMemo(() => dataByWeek(mockBloodGlucose), [mockBloodGlucose]);
+  const [rightIndex, setRightIndex] = React.useState(dateByWeek.length - 1);
+  const [leftIndex, setLeftIndex] = React.useState(dateByWeek.length - 1);
+  const [data, setData] = React.useState(dateByWeek[leftIndex]);
+  const [dateDescription, setDateDescription] = React.useState(descriptionDate(data[0].end_time, data[data.length - 1].end_time));
+
+  const prevWeek = React.useCallback((newDate = false) => {
+    if (leftIndex > 0 && dateByWeek.length > leftIndex - 1) {
+      let prevWeek = dateByWeek[leftIndex - 1];
+      newDate ? setData([...prevWeek]) : setData([...prevWeek, ...data]);
+      if (prevWeek.length > 0) {
+        setDateDescription(descriptionDate(prevWeek[0].end_time, data[data.length - 1].end_time));
+        setLeftIndex(leftIndex - 1);
+        setPage(page + 1);
+      }
+    }
+  }, [data, leftIndex, page]);
+
+  const nextWeek = React.useCallback((newDate = false) => {
+    if (dateByWeek.length > rightIndex + 1) {
+      let nextWeek = dateByWeek[rightIndex + 1];
+      newDate ? setData(...nextWeek) : setData([...data, ...nextWeek]);
+      if (nextWeek.length > 0) {
+        setDateDescription(descriptionDate(data[0].end_time, nextWeek[nextWeek.length - 1].end_time));
+        setRightIndex(rightIndex + 1);
+        setPage(page + 1);
+      }
+    }
+  }, [data, rightIndex, page]);
 
   React.useEffect(() => {
     char?.moveViewToX(data.length);
   }, [char]);
 
+  React.useEffect(() => {
+    // setDateDescription(descriptionDate(data[0].end_time, data[data.length - 1].end_time))
+  }, [data]);
+
   const handleSelect = ({nativeEvent}) => {
     if (!!nativeEvent.data && listRef?.props.data?.length > 0) {
-      listRef?.scrollToIndex({animated: true, index: nativeEvent.data.x - 1 })
+      listRef?.scrollToIndex({animated: true, index: nativeEvent.data.x - 1});
     }
   };
 
-
   const onChange = React.useCallback(({nativeEvent}) => {
     const leftPagination = () => {
-      Math.random() > 0.5 ? setData([...mockValues2, ...data]):  setData([...mockValues3, ...data]);
-      setPage(page + 1);
+      prevWeek();
       setDirection(DIRECTION_LEFT);
     };
 
     const rightPagination = () => {
-      Math.random() > 0.5 ?  setData([...data, ...mockValues2]) : setData([...data, ...mockValues3]);
-      setPage(page + 1);
+      nextWeek();
       setDirection(DIRECTION_RIGHT);
     };
+
     const {
       right, /*visible chart right X value*/
       left, /*visible chart left X value*/
     } = nativeEvent;
 
     if (Platform.OS === 'android') {
-      if (nativeEvent.action === "chartGestureEnd") {
+      if (nativeEvent.action === 'chartGestureEnd') {
         if (left <= OFFSET) {
-          leftPagination()
-        }else if (right >= data.length + OFFSET) {
-          rightPagination()
+          leftPagination();
+        } else if (right >= data.length + OFFSET) {
+          rightPagination();
         }
       }
     } else {
       if (left >= OFFSET - ERROR_COEFFICIENT && left <= OFFSET + ERROR_COEFFICIENT) {
-        leftPagination()
+        leftPagination();
       } else if (right >= data.length + OFFSET - ERROR_COEFFICIENT) {
-        rightPagination()
+        rightPagination();
       }
     }
-  }, [data, page]);
+  }, [data, page, rightIndex, leftIndex]);
+
+  const errorScroll = React.useCallback((error) => {
+    listRef?.scrollToIndex({animated: true, index: error.highestMeasuredFrameIndex});
+    listRef?.scrollToIndex({animated: true, index: error.index - 1});
+  }, [listRef]);
+
+  const showNextPage = React.useCallback(() => {
+    let date = dateByWeek[rightIndex + 1];
+    setData(dateByWeek[rightIndex + 1]);
+    setLeftIndex(leftIndex + 1);
+    setRightIndex(rightIndex + 1);
+    setDateDescription(descriptionDate(date[0].end_time, date[date.length - 1].end_time));
+
+  }, [rightIndex, leftIndex, data]);
+
+  const showPrevPage = React.useCallback(() => {
+    let date = dateByWeek[leftIndex - 1];
+    setData(dateByWeek[leftIndex - 1]);
+    setLeftIndex(leftIndex - 1);
+    setRightIndex(rightIndex - 1);
+    setDateDescription(descriptionDate(date[0].end_time, date[date.length - 1].end_time));
+  }, [rightIndex, leftIndex, data]);
 
   return (
     <View style={ styles.container }>
-      <View style={{width: '30%', flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'center', marginTop: 40}}>
-        <TouchableOpacity
-          style={{width: 30, height: 30, backgroundColor: '#fac', borderRadius: 30}}
-          onPress={() => setData(mockValues2)}
-        />
-        <TouchableOpacity
-          style={{width: 30, height: 30, backgroundColor: '#fd2', borderRadius: 30}}
-          onPress={() => setData(mockValues3)}
-
-        />
-      </View>
+      <ChartDateSwitcher
+        title={ dateDescription }
+        nextDate={ dateByWeek.length > rightIndex + 1 ? showNextPage : null }
+        prevDate={ leftIndex - 1 > 0 ? showPrevPage : null }
+      />
       <GradientChart
         containerStyle={ styles.chartContainer }
         data={ data }
@@ -83,6 +135,7 @@ function ChartContainer(props) {
         direction={ direction }
       />
       <BottomChartModal
+        errorScroll={errorScroll}
         listRef={ setListRef }
         modalHeight={ 200 }
         duration={ 500 }

@@ -4,7 +4,6 @@ import styles from './styles';
 import {LineChart} from 'react-native-charts-wrapper';
 import {MAX_Y, OFFSET} from '../../constants/charConst';
 import {generateAxisValues, generateCharValues, zoom} from '../../utils/utils';
-import {mockValues} from '../../utils/mock';
 
 
 function GradientChart(props) {
@@ -80,11 +79,15 @@ function GradientChart(props) {
         ref={ setRef }
         xAxis={ xAxis }
         yAxis={ yAxis }
-        heightGradient={ MAX_Y }
+        heightGradient={ {
+          height: MAX_Y,
+          colors: ["#f54336", "#8bc34a", "#feeb39", "#f54336"],
+          positions: [0, 69, 180, 240]
+        } }
         style={ styles.chart }
         data={ Platform.OS === 'ios' ? chartData : {
           dataSets: [{
-            values: generateCharValues(mockValues),
+            values: generateCharValues(data),
             label: '',
             config: {
               mode: 'HORIZONTAL_BEZIER',
@@ -105,7 +108,7 @@ function GradientChart(props) {
         onChange={ onChange }
         zoom={ zoom(data, page, direction) }
         dragDecelerationEnabled={Platform.OS === 'ios'}
-        dragDecelerationFrictionCoef={Platform.OS === 'ios' ? 0.9 : 0.9}
+        dragDecelerationFrictionCoef={0.9}
         legend={ {
           enabled: false,
         } }
