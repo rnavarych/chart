@@ -1,11 +1,12 @@
 import React from 'react';
 import {SafeAreaView} from 'react-native';
-import ChartContainer from './containers/chartContainer';
+
+import DataHistoryScreen from './containers/dataHistory';
 
 function App() {
   return (
     <SafeAreaView style={{flex: 1}}>
-      <ChartContainer/>
+      <DataHistoryScreen />
     </SafeAreaView>
   );
 }
