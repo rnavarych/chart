@@ -1,10 +1,30 @@
 import React from 'react';
-import {AppRegistry, StyleSheet, Text, View, processColor} from 'react-native';
+import {
+  AppRegistry,
+  StyleSheet,
+  Text,
+  View,
+  processColor,
+  Platform,
+} from 'react-native';
 
 import _ from 'lodash';
 import {LineChart} from 'react-native-charts-wrapper';
 import {OFFSET} from '../../constants/charConst';
 import {generateAxisValues} from '../../utils/utils';
+import {mockBloodPressure} from '../../utils/mock';
+
+const getDataItemConfig = (colors) => {
+  return {
+    lineWidth: 2,
+    drawValues: false,
+    circleRadius: Platform.OS === 'ios' ? 6 : 5,
+    highlightEnabled: true,
+    drawHighlightIndicators: true,
+    color: processColor(colors[1]),
+    circleColors: [processColor(colors[0]), processColor(colors[1])],
+  };
+};
 
 class TimeSeriesLineChartScreen extends React.Component {
   constructor() {
@@ -12,175 +32,73 @@ class TimeSeriesLineChartScreen extends React.Component {
 
     this.state = {
       data: {},
-      legend: {
-        enabled: true,
-        textColor: processColor('red'),
-        textSize: 12,
-        form: 'SQUARE',
-        formSize: 14,
-        xEntrySpace: 10,
-        yEntrySpace: 5,
-        formToTextSpace: 5,
-        wordWrapEnabled: true,
-        maxSizePercent: 0.5,
-        custom: {
-          colors: [processColor('red'), processColor('red')],
-          labels: ['REFER', 'USER'],
-        },
-      },
-      marker: {
-        enabled: false,
-        markerColor: processColor('#F0C0FF8C'),
-        textColor: processColor('white'),
-        markerFontSize: 14,
-      },
-
-      selectedEntry: '',
-      yAxis: {left: {axisMaximum: 300}, right: {enabled: false}},
     };
   }
 
   componentDidMount() {
     setTimeout(() => {
+      const data = mockBloodPressure(2, 4);
+      let inc = 0;
+
+      const res = data.map((item) => ({
+        values: [
+          {x: ++inc, y: item.value[0]},
+          {x: inc, y: item.value[1]},
+        ],
+        label: '',
+        config: getDataItemConfig(item.colors),
+      }));
+
+      res.push({
+        values: [{x: inc + 0.5, y: 40}],
+        label: '',
+        config: getDataItemConfig(['transparent', 'transparent']),
+      });
+
       this.setState({
         data: {
-          dataSets: [
-            {
-              values: [
-                {
-                  x: 1,
-                  y: 200,
-                  marker:
-                    'a very long long long long long long long long \nmarker at top left',
-                },
-                {x: 1, y: 90, marker: 'eat eat eat, never\n stop eat'},
-              ],
-
-              label: 'user',
-              config: {
-                lineWidth: 1,
-                drawValues: true,
-                circleRadius: 5,
-                highlightEnabled: true,
-                drawHighlightIndicators: true,
-                color: processColor('red'),
-                circleColors: [processColor('red'), processColor('green')],
-                drawFilled: true,
-                valueTextSize: 10,
-                fillColor: processColor('red'),
-                fillAlpha: 45,
-                valueFormatter: '$###.0',
-                circleColor: processColor('red'),
-              },
-            },
-            {
-              values: [
-                {
-                  x: 2,
-                  y: 150,
-                  marker:
-                    'a very long long long long long long long long \nmarker at top left',
-                },
-                {x: 2, y: 20, marker: 'eat eat eat, never\n stop eat'},
-              ],
-
-              label: 'user',
-              config: {
-                lineWidth: 1,
-                drawValues: true,
-                circleRadius: 5,
-                highlightEnabled: true,
-                drawHighlightIndicators: true,
-                color: processColor('red'),
-                drawFilled: true,
-                valueTextSize: 10,
-                fillColor: processColor('red'),
-                fillAlpha: 45,
-                valueFormatter: '$###.0',
-                circleColor: processColor('red'),
-              },
-            },
-            {
-              values: [
-                {
-                  x: 3,
-                  y: 210,
-                  marker:
-                    'a very long long long long long long long long \nmarker at top left',
-                },
-                {x: 3, y: 200, marker: 'eat eat eat, never\n stop eat'},
-              ],
-
-              label: 'user',
-              config: {
-                lineWidth: 1,
-                drawValues: true,
-                circleRadius: 5,
-                highlightEnabled: true,
-                drawHighlightIndicators: true,
-                color: processColor('red'),
-                drawFilled: true,
-                valueTextSize: 10,
-                fillColor: processColor('red'),
-                fillAlpha: 45,
-                valueFormatter: '$###.0',
-                circleColor: processColor('red'),
-              },
-            },
-            {
-              values: [
-                {
-                  x: 4,
-                  y: 300,
-                  marker:
-                    'a very long long long long long long long long \nmarker at top left',
-                },
-                {x: 4, y: 10, marker: 'eat eat eat, never\n stop eat'},
-              ],
-
-              label: 'user',
-              config: {
-                lineWidth: 1,
-                drawValues: true,
-                circleRadius: 5,
-                highlightEnabled: true,
-                drawHighlightIndicators: true,
-                color: processColor('red'),
-                drawFilled: true,
-                valueTextSize: 10,
-                fillColor: processColor('red'),
-                fillAlpha: 45,
-                valueFormatter: '$###.0',
-                circleColor: processColor('red'),
-              },
-            },
-          ],
+          dataSets: res,
         },
       });
     }, 1000);
   }
 
   render() {
-    let borderColor = processColor('red');
     return (
-      <View style={{flex: 1}}>
-        <View style={styles.container}>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <View style={styles.cardHeader} />
+          <View style={styles.cardHeaderWorkaround} />
+          <Text style={styles.cardFooterWorkaround}>1</Text>
           <LineChart
             style={styles.chart}
             data={this.state.data}
+            legend={{enabled: false}}
+            marker={{enabled: false}}
             chartDescription={{text: ''}}
-            legend={this.state.legend}
-            marker={this.state.marker}
-            drawGridBackground={true}
-            borderColor={borderColor}
-            borderWidth={1}
-            drawBorders={true}
-            yAxis={this.state.yAxis}
+            yAxis={{
+              left: {
+                enabled: false,
+                drawAxisLines: false,
+                drawGridLines: false,
+              },
+              right: {
+                axisMaximum: 200,
+                axisMinimum: 50,
+                drawAxisLine: false,
+                drawAxisLines: false,
+                labelCount: 7,
+                gridColor: processColor('rgba(128, 147, 176, 0.2)'),
+                textSize: 10,
+                textColor: processColor('#8093b0'),
+              },
+            }}
             xAxis={{
               position: 'BOTTOM',
-              axisMinimum: OFFSET,
+              axisMinimum: 0.5,
               textSize: 10,
-              fontWeight: 'bold',
+              textColor: processColor('#8093b0'),
+              gridColor: processColor('transparent'),
             }}
           />
         </View>
@@ -191,13 +109,50 @@ class TimeSeriesLineChartScreen extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
-    flex: 2,
-    backgroundColor: 'rgba(50, 177, 200, 0.2)',
+    backgroundColor: 'violet',
+  },
+  card: {
+    height: 360,
+    width: '100%',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+  },
+  cardHeader: {
+    height: 40,
+    width: '100%',
+    backgroundColor: '#f4f5f8',
+  },
+  cardHeaderWorkaround: {
+    position: 'absolute',
+    width: '100%',
+    height: 10,
+    backgroundColor: '#f4f5f8',
+    top: 40,
+  },
+  cardFooterWorkaround: {
+    position: 'absolute',
+    width: '100%',
+    bottom: 0,
+    fontSize: 10,
+    color: '#f4f5f8',
+    backgroundColor: '#f4f5f8',
+    paddingTop: Platform.OS === 'ios' ? 4 : 1,
+    paddingBottom: 20,
   },
   chart: {
-    height: 260,
-    backgroundColor: 'white',
+    height: 300,
+    backgroundColor: 'transparent',
+  },
+  text: {
+    fontSize: 10,
+    color: '#8093b0',
+    backgroundColor: 'green',
+    position: 'absolute',
+    bottom: 4,
+    right: 50,
   },
 });
 
