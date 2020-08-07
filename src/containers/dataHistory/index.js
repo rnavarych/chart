@@ -33,7 +33,7 @@ export default () => {
     case CHART_TYPES[3]:
       content = (
         <Suspense fallback={<Text style={styles.placeholder}>Loading...</Text>}>
-          <BloodPressure />
+          <BloodPressure interval={interval} />
         </Suspense>
       );
       break;
