@@ -19,8 +19,8 @@ export const mockBloodGlucose = (countDays = 1, countPerDay = 4) => {
       date.setMinutes(getRandomInt(59));
       result.push({
         end_time: date.getTime(),
-        unit: 'mmHg',
-        value: getRandomInt(300) + 40,
+        unit: 'mg/dL',
+        value: getRandomInt(300),
       });
     }
   }
