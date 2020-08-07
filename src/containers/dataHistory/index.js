@@ -8,7 +8,7 @@ import {CHART_INTERVALS, CHART_TYPES} from '../../constants';
 import styles from './styles';
 
 const BloodGlucose = React.lazy(() => import('../chartContainer'));
-const BloodPressure = React.lazy(() => import('../temp'));
+const BloodPressure = React.lazy(() => import('../bloodPressure'));
 
 export default () => {
   const [interval, setInterval] = useState(CHART_INTERVALS[0]);
