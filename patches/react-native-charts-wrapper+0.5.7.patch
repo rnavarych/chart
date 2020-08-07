@@ -8,7 +8,7 @@ index 7279dee..cb8377d 100644
    s.dependency 'SwiftyJSON', '5.0'
 -  s.dependency 'Charts', '3.3.0'
 -
-+  s.dependency 'RNChartsGradient', '1.5.0'
++  s.dependency 'RNChartsGradient', '1.6.0'
 
  end
 diff --git a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java

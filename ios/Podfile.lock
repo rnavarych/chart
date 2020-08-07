@@ -298,9 +298,9 @@ PODS:
     - React-jsi (= 0.63.2)
   - RNCharts (0.5.7):
     - React
-    - RNChartsGradient (= 1.5.0)
+    - RNChartsGradient (= 1.6.0)
     - SwiftyJSON (= 5.0)
-  - RNChartsGradient (1.5.0)
+  - RNChartsGradient (1.6.0)
   - SwiftyJSON (5.0.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -466,8 +466,8 @@ SPEC CHECKSUMS:
   React-RCTText: 1b6773e776e4b33f90468c20fe3b16ca3e224bb8
   React-RCTVibration: 4d2e726957f4087449739b595f107c0d4b6c2d2d
   ReactCommon: a0a1edbebcac5e91338371b72ffc66aa822792ce
-  RNCharts: 1dc87cb4ad805645b8e302161c224242588911c6
-  RNChartsGradient: 5b8625345cc2ef39bbd0f39ca577ff00ef794567
+  RNCharts: 54f0e357dcc266fe5d9858ee83d5c0f3468989f2
+  RNChartsGradient: 898bbd9e2fcde845b3618ddaef998c327cfdfd41
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   Yoga: 7740b94929bbacbddda59bf115b5317e9a161598
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
