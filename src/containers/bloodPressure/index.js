@@ -3,24 +3,26 @@ import {Text, View, processColor, Platform} from 'react-native';
 
 import {LineChart} from 'react-native-charts-wrapper';
 
-import {CHART_INTERVALS} from '../../constants';
+import {
+  CHART_INTERVALS,
+  CHART_BLOOD_PRESSURE_MIN_Y,
+  CHART_BLOOD_PRESSURE_MAX_Y,
+} from '../../constants';
 
-import {fetchBloodPressureData} from '../../utils/mock';
+import {fetchBloodPressureDataForDays} from '../../utils/mock';
 import {sortBloodPressureData} from '../../utils/utils';
 
 import styles from './styles';
 
-const getDataItemConfig = (color, colors) => {
-  return {
-    lineWidth: 2,
-    drawValues: false,
-    circleRadius: Platform.OS === 'ios' ? 6 : 5,
-    highlightEnabled: true,
-    drawHighlightIndicators: true,
-    color: processColor(color),
-    circleColors: [processColor(colors[0]), processColor(colors[1])],
-  };
-};
+const getDataItemConfig = (color, colors) => ({
+  lineWidth: 2,
+  drawValues: false,
+  circleRadius: Platform.OS === 'ios' ? 6 : 5,
+  highlightEnabled: true,
+  drawHighlightIndicators: true,
+  color: processColor(color),
+  circleColors: [processColor(colors[0]), processColor(colors[1])],
+});
 
 class BloodPressureFragment extends React.Component {
   constructor(props) {
@@ -33,7 +35,7 @@ class BloodPressureFragment extends React.Component {
 
   componentDidMount() {
     setTimeout(() => {
-      fetchBloodPressureData(250, 1).then((data) => {
+      fetchBloodPressureDataForDays().then((data) => {
         const sorted = sortBloodPressureData(data);
 
         let inc = 0;
@@ -47,11 +49,14 @@ class BloodPressureFragment extends React.Component {
           config: getDataItemConfig(item.color, item.colors),
         }));
 
-        // res.push({
-        //   values: [{x: inc + 0.5, y: 40}],
-        //   label: '',
-        //   config: getDataItemConfig(['transparent', 'transparent']),
-        // });
+        res.push({
+          values: [{x: ++inc, y: 40}],
+          label: '',
+          config: getDataItemConfig('transparent', [
+            'transparent',
+            'transparent',
+          ]),
+        });
 
         this.setState({
           data: {
@@ -73,17 +78,19 @@ class BloodPressureFragment extends React.Component {
             style={styles.chart}
             data={this.state.data}
             legend={{enabled: false}}
-            marker={{enabled: false}}
+            marker={{
+              enabled: true,
+              markerColor: processColor('#f4f5f8'),
+              textColor: processColor('#8093b0'),
+            }}
             chartDescription={{text: ''}}
             yAxis={{
               left: {
                 enabled: false,
-                drawAxisLines: false,
-                drawGridLines: false,
               },
               right: {
-                axisMaximum: 200,
-                axisMinimum: 50,
+                axisMaximum: CHART_BLOOD_PRESSURE_MAX_Y,
+                axisMinimum: CHART_BLOOD_PRESSURE_MIN_Y,
                 drawAxisLine: false,
                 drawAxisLines: false,
                 labelCount: 7,
@@ -94,7 +101,6 @@ class BloodPressureFragment extends React.Component {
             }}
             xAxis={{
               position: 'BOTTOM',
-              axisMinimum: 0.5,
               textSize: 10,
               textColor: processColor('#8093b0'),
               gridColor: processColor('transparent'),

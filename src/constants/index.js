@@ -7,3 +7,6 @@ export const CHART_TYPES = [
   'blood_glucose',
   'activity',
 ];
+
+export const CHART_BLOOD_PRESSURE_MIN_Y = 50;
+export const CHART_BLOOD_PRESSURE_MAX_Y = 200;

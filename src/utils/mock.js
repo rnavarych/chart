@@ -27,7 +27,11 @@ export const mockBloodGlucose = (countDays = 1, countPerDay = 4) => {
   return result.reverse();
 }
 
-export const fetchBloodPressureData = (days, daxPerDay) => {
+export const fetchBloodPressureDataForDays = () => {
+  return fetchBloodPressureData(7, 6);
+};
+
+const fetchBloodPressureData = (days, daxPerDay) => {
   return new Promise((resolve) => {
     const data = mockBloodPressure(days, daxPerDay);
     resolve(data);
