@@ -27,20 +27,30 @@ export const mockBloodGlucose = (countDays = 1, countPerDay = 4) => {
   return result.reverse();
 }
 
-export const mockBloodPressure = (countDays = 1, countPerDay = 4) => {
+export const fetchBloodPressureData = (days, daxPerDay) => {
+  return new Promise((resolve) => {
+    const data = mockBloodPressure(days, daxPerDay);
+    resolve(data);
+  });
+};
+
+const mockBloodPressure = (countDays = 1, maxPerDay = 2) => {
   const result = [];
 
   let inc = 0;
   const today = new Date().getTime();
 
   for (let i = 0; i < countDays; i++) {
-    const timestamp = today + i * 24 * 60 * 60 * 1000;
+    const timestamp = today - i * 24 * 60 * 60 * 1000;
+    const countPerDay = getRandomInt(maxPerDay);
     for (let j = 0; j < countPerDay; j++) {
       const date = new Date(timestamp);
       date.setHours(getRandomInt(23));
       date.setMinutes(getRandomInt(59));
+      const colors = [getRandomColor(), getRandomColor()];
       result.push({
-        colors: [getRandomColor(), getRandomColor()],
+        color: colors[getRandomInt(1)],
+        colors,
         id: [++inc, ++inc],
         time: date.getTime(),
         type: 'blood_pressure',

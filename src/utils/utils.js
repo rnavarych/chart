@@ -1,5 +1,5 @@
 import {DIRECTION_LEFT, OFFSET} from '../constants/charConst';
-import moment from 'moment'
+import moment from 'moment';
 
 //return array = [{x: number, y: number}]
 export function generateCharValues(data) {
@@ -8,7 +8,7 @@ export function generateCharValues(data) {
 
 //return array = [string]
 export function generateAxisValues(data, withOffset) {
-  let axisValues = data.map(item => moment(item.end_time).format('h A'));
+  let axisValues = data.map((item) => moment(item.end_time).format('h A'));
   return withOffset ? ['', ...axisValues, ''] : axisValues;
 }
 
@@ -20,9 +20,12 @@ export const zoom = (data, page, direction) => {
   }
   let centerX = 3 + OFFSET;
   let listSizeBeforePaginationLeft = data.length - beforeData.length + centerX;
-  let xValue = direction === DIRECTION_LEFT ? listSizeBeforePaginationLeft : beforeData.length-2.5;
+  let xValue =
+    direction === DIRECTION_LEFT
+      ? listSizeBeforePaginationLeft
+      : beforeData.length - 2.5;
   beforeData = data;
-  return ({scaleX: data.length / 6, scaleY: 0, xValue, yValue: 0});
+  return {scaleX: data.length / 6, scaleY: 0, xValue, yValue: 0};
 };
 
 export const dataByWeek = (bloodGlucose) => {
@@ -30,7 +33,7 @@ export const dataByWeek = (bloodGlucose) => {
   let weeks = [];
   let week = 30;
   let isLastItemPerDate = false;
-  bloodGlucose.map(item => {
+  bloodGlucose.map((item) => {
     if (isLastItemPerDate) {
       isLastItemPerDate = false;
       week = moment(item.end_time).week();
@@ -48,5 +51,10 @@ export const dataByWeek = (bloodGlucose) => {
 };
 
 export const descriptionDate = (start, end) => {
-  return `${moment(start).format('DD-MM')} — ${moment(end).format('DD-MM')}`
-}
+  return `${moment(start).format('DD-MM')} — ${moment(end).format('DD-MM')}`;
+};
+
+export const sortBloodPressureData = (data = []) => {
+  data.sort((a, b) => a.time - b.time);
+  return data;
+};
