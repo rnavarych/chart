@@ -2,10 +2,10 @@ import {StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
   button: {
-    width: 30,
-    height: 30,
+    width: 24,
+    height: 24,
     backgroundColor: '#f4f5f8',
-    borderRadius: 15,
+    borderRadius: 12,
     shadowColor: "#899198",
     shadowOffset: {
       width: 2,
@@ -13,7 +13,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 1,
     shadowRadius: 5,
-    elevation: 10
+    elevation: 10,
+    marginHorizontal: 10
   },
   container: {
     width: '50%',

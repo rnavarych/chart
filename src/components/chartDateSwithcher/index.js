@@ -3,7 +3,7 @@ import {Text, TouchableOpacity, View} from 'react-native';
 import styles from './styles';
 
 function ChartDateSwitcher(props) {
-  const {nextDate, prevDate, title } = props;
+  const {nextDate, prevDate, title, containerStyle } = props;
 
   const button = React.useCallback( (onPress) => (
     <TouchableOpacity
@@ -14,7 +14,7 @@ function ChartDateSwitcher(props) {
   ), []);
 
   return (
-    <View style={ styles.container }>
+    <View style={ containerStyle }>
       {button(prevDate)}
       <Text style={styles.description}>{title}</Text>
       {button(nextDate)}

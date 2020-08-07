@@ -5,7 +5,7 @@ import ModalItem from '../modalItem';
 import ModalDateItem from '../modalDateItem';
 
 function BottomChartModal(props) {
-  const {modalHeight = 200, duration = 500, content, errorScroll, listRef} = props;
+  const {modalHeight, duration, content, errorScroll, listRef} = props;
   const [modalY] = React.useState(new Animated.Value(modalHeight));
   const [modalVisible, setModalVisible] = React.useState(true);
 

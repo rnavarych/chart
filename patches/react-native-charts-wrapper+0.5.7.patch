@@ -1,0 +1,798 @@
+diff --git a/node_modules/react-native-charts-wrapper/RNCharts.podspec b/node_modules/react-native-charts-wrapper/RNCharts.podspec
+index 7279dee..cb8377d 100644
+--- a/node_modules/react-native-charts-wrapper/RNCharts.podspec
++++ b/node_modules/react-native-charts-wrapper/RNCharts.podspec
+@@ -20,7 +20,6 @@ Pod::Spec.new do |s|
+   s.swift_version = '5.0'
+   s.dependency 'React'
+   s.dependency 'SwiftyJSON', '5.0'
+-  s.dependency 'Charts', '3.3.0'
+-
++  s.dependency 'RNChartsGradient', '1.6.0'
+
+ end
+diff --git a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
+index 81b7654..4933e84 100644
+--- a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
++++ b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/charts/LineChartManager.java
+@@ -1,6 +1,7 @@
+ package com.github.wuxudong.rncharts.charts;
+
+
++import com.facebook.react.bridge.ReadableMap;
+ import com.facebook.react.uimanager.ThemedReactContext;
+ import com.github.mikephil.charting.charts.LineChart;
+ import com.github.mikephil.charting.data.Entry;
+@@ -8,8 +9,20 @@ import com.github.wuxudong.rncharts.data.DataExtract;
+ import com.github.wuxudong.rncharts.data.LineDataExtract;
+ import com.github.wuxudong.rncharts.listener.RNOnChartValueSelectedListener;
+ import com.github.wuxudong.rncharts.listener.RNOnChartGestureListener;
++import android.graphics.Shader;
++import android.graphics.Color;
++import android.graphics.LinearGradient;
++import android.graphics.Paint;
++import android.util.DisplayMetrics;
++import com.facebook.react.uimanager.annotations.ReactProp;
++import com.facebook.react.bridge.ReactApplicationContext;
++import android.util.Log;
++
++import java.util.ArrayList;
++import java.util.List;
+
+ public class LineChartManager extends BarLineChartBaseManager<LineChart, Entry> {
++    private ThemedReactContext context;
+
+     @Override
+     public String getName() {
+@@ -18,12 +31,45 @@ public class LineChartManager extends BarLineChartBaseManager<LineChart, Entry>
+
+     @Override
+     protected LineChart createViewInstance(ThemedReactContext reactContext) {
++        this.context = reactContext;
++
+         LineChart lineChart =  new LineChart(reactContext);
+         lineChart.setOnChartValueSelectedListener(new RNOnChartValueSelectedListener(lineChart));
+         lineChart.setOnChartGestureListener(new RNOnChartGestureListener(lineChart));
++
+         return lineChart;
+     }
+
++    @ReactProp(name="heightGradient")
++    public void setGradientSettings(LineChart lineChart, ReadableMap config) {
++        DisplayMetrics displayMetrics = this.context.getResources().getDisplayMetrics();
++        int height = config.getInt("height");
++        List<Object> colors = config.getArray("colors").toArrayList();
++        List<Object> positions = config.getArray("positions").toArrayList();
++        int[] gradientColors = new int[colors.size()];
++        float[] gradientPositions= new float[positions.size()];
++        for (int i=0; i< colors.size(); i++) {
++            gradientColors[colors.size() - i - 1] = Color.parseColor((String)colors.get(i));
++            gradientPositions[i] = (float)((double)positions.get(i)/height);
++        }
++
++
++        int h = (int)(displayMetrics.density * height);
++
++        Paint paint = lineChart.getRenderer().getPaintRender();
++
++        LinearGradient linGrad = new LinearGradient(
++                0,
++                0,
++                0,
++                h,
++                gradientColors,
++                gradientPositions,
++                Shader.TileMode.REPEAT);
++
++        paint.setShader(linGrad);
++    }
++
+     @Override
+     DataExtract getDataExtract() {
+         return new LineDataExtract();
+diff --git a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
+index 58f89d3..658295b 100644
+--- a/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
++++ b/node_modules/react-native-charts-wrapper/android/src/main/java/com/github/wuxudong/rncharts/listener/RNOnChartGestureListener.java
+@@ -43,14 +43,17 @@ public class RNOnChartGestureListener implements OnChartGestureListener {
+
+     @Override
+     public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
++        sendEvent("chartGestureStart", me);
+     }
+
+     @Override
+     public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
++        sendEvent("chartGestureEnd", me);
+     }
+
+     @Override
+     public void onChartLongPressed(MotionEvent me) {
++        sendEvent("chartLongPress", me);
+     }
+
+     @Override
+@@ -60,10 +63,12 @@ public class RNOnChartGestureListener implements OnChartGestureListener {
+
+     @Override
+     public void onChartSingleTapped(MotionEvent me) {
++        sendEvent("chartSingleTap", me);
+     }
+
+     @Override
+     public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
++        sendEvent("chartFling", me1);
+     }
+
+     @Override
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/ReactNativeCharts.iml b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/ReactNativeCharts.iml
+new file mode 100644
+index 0000000..24643cc
+--- /dev/null
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/ReactNativeCharts.iml
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="WEB_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$">
++      <excludeFolder url="file://$MODULE_DIR$/.tmp" />
++      <excludeFolder url="file://$MODULE_DIR$/temp" />
++      <excludeFolder url="file://$MODULE_DIR$/tmp" />
++    </content>
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/misc.xml b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/misc.xml
+new file mode 100644
+index 0000000..28a804d
+--- /dev/null
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/misc.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="JavaScriptSettings">
++    <option name="languageLevel" value="ES6" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/modules.xml b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/modules.xml
+new file mode 100644
+index 0000000..8c17a30
+--- /dev/null
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/modules.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/ReactNativeCharts.iml" filepath="$PROJECT_DIR$/.idea/ReactNativeCharts.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/workspace.xml b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/workspace.xml
+new file mode 100644
+index 0000000..31dfd29
+--- /dev/null
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/.idea/workspace.xml
+@@ -0,0 +1,47 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ChangeListManager">
++    <list default="true" id="4977e302-e285-4ba2-be7f-ee56845eea3e" name="Default Changelist" comment="" />
++    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
++    <option name="SHOW_DIALOG" value="false" />
++    <option name="HIGHLIGHT_CONFLICTS" value="true" />
++    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
++    <option name="LAST_RESOLUTION" value="IGNORE" />
++  </component>
++  <component name="ProjectId" id="1fHCIoV6WdZBIQaDnzuappXZORJ" />
++  <component name="PropertiesComponent">
++    <property name="WebServerToolWindowFactoryState" value="false" />
++    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
++    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
++    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
++  </component>
++  <component name="RunDashboard">
++    <option name="ruleStates">
++      <list>
++        <RuleState>
++          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
++        </RuleState>
++        <RuleState>
++          <option name="name" value="StatusDashboardGroupingRule" />
++        </RuleState>
++      </list>
++    </option>
++  </component>
++  <component name="SvnConfiguration">
++    <configuration />
++  </component>
++  <component name="TaskManager">
++    <task active="true" id="Default" summary="Default task">
++      <changelist id="4977e302-e285-4ba2-be7f-ee56845eea3e" name="Default Changelist" comment="" />
++      <created>1595865553410</created>
++      <option name="number" value="Default" />
++      <option name="presentableId" value="Default" />
++      <updated>1595865553410</updated>
++      <workItem from="1595865554823" duration="45000" />
++    </task>
++    <servers />
++  </component>
++  <component name="TypeScriptGeneratedFilesManager">
++    <option name="version" value="1" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/BalloonMarker.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/BalloonMarker.swift
+index 94f5401..fbc6f0b 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/BalloonMarker.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/BalloonMarker.swift
+@@ -14,7 +14,7 @@
+
+ import Foundation;
+
+-import Charts;
++import RNChartsGradient;
+
+ import SwiftyJSON;
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/ChartGroupHolder.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/ChartGroupHolder.swift
+index d2b996a..b188e48 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/ChartGroupHolder.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/ChartGroupHolder.swift
+@@ -7,7 +7,7 @@
+
+ import Foundation
+
+-import Charts
++import RNChartsGradient
+
+ class ChartHolder {
+     open weak var chart:BarLineChartViewBase?
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/CustomChartDateFormatter.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/CustomChartDateFormatter.swift
+index b58028a..930e833 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/CustomChartDateFormatter.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/CustomChartDateFormatter.swift
+@@ -6,7 +6,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+
+ open class CustomChartDateFormatter: NSObject, IValueFormatter, IAxisValueFormatter {
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/DataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/DataExtract.swift
+index 1c6b2a1..a5806a8 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/DataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/DataExtract.swift
+@@ -3,7 +3,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ open class DataExtract {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/IndexValueFormatter.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/IndexValueFormatter.swift
+index c5ea884..653fda2 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/IndexValueFormatter.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/IndexValueFormatter.swift
+@@ -8,7 +8,7 @@
+
+ import Foundation
+
+-import Charts
++import RNChartsGradient
+
+ open class IndexValueFormatter: NSObject, IValueFormatter {
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartBaseManager.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartBaseManager.swift
+index 01b5898..a134ba2 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartBaseManager.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartBaseManager.swift
+@@ -4,7 +4,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+
+ protocol RNBarLineChartBaseManager {
+   var _bridge : RCTBridge? {get}
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
+index 77e454f..e7f2527 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNBarLineChartViewBase.swift
+@@ -4,7 +4,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNBarLineChartViewBase: RNYAxisChartViewBase {
+@@ -35,7 +35,6 @@ class RNBarLineChartViewBase: RNYAxisChartViewBase {
+         }
+     }
+
+-
+     func setMaxHighlightDistance(_  maxHighlightDistance: CGFloat) {
+         barLineChart.maxHighlightDistance = maxHighlightDistance;
+     }
+@@ -230,6 +229,7 @@ class RNBarLineChartViewBase: RNYAxisChartViewBase {
+         if let config = savedVisibleRange {
+             updateVisibleRange(config)
+         }
++        gradient(heightGradient!)
+         barLineChart.notifyDataSetChanged()
+     }
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
+index ef7c739..1e56088 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartManagerBridge.h
+@@ -12,6 +12,8 @@
+ #define EXPORT_CHART_BASE_PROPERTIES \
+ RCT_EXPORT_VIEW_PROPERTY(data, NSDictionary) \
+ RCT_EXPORT_VIEW_PROPERTY(highlights, NSArray) \
++RCT_EXPORT_VIEW_PROPERTY(heightGradient, NSDictionary) \
++RCT_EXPORT_VIEW_PROPERTY(gradientSettings, NSDictionary) \
+ RCT_EXPORT_VIEW_PROPERTY(legend, NSDictionary) \
+ RCT_EXPORT_VIEW_PROPERTY(chartBackgroundColor, NSInteger) \
+ RCT_EXPORT_VIEW_PROPERTY(chartDescription, NSDictionary) \
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
+index 3035d92..224e8be 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNChartViewBase.swift
+@@ -7,10 +7,47 @@
+ //
+
+ import UIKit
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ // In react native, because object-c is unaware of swift protocol extension. use baseClass as workaround
++extension UIColor {
++    public convenience init?(hex: String) {
++        let r, g, b, a: CGFloat
++
++        if hex.hasPrefix("#") {
++            let start = hex.index(hex.startIndex, offsetBy: 1)
++            let hexColor = String(hex[start...])
++            let scanner = Scanner(string: hexColor)
++            var hexNumber: UInt64 = 0
++            if hexColor.count == 8 {
++
++
++                if scanner.scanHexInt64(&hexNumber) {
++                    r = CGFloat((hexNumber & 0xff000000) >> 24) / 255
++                    g = CGFloat((hexNumber & 0x00ff0000) >> 16) / 255
++                    b = CGFloat((hexNumber & 0x0000ff00) >> 8) / 255
++                    a = CGFloat(hexNumber & 0x000000ff) / 255
++                    print(r,g,b,a)
++                    self.init(red: r, green: g, blue: b, alpha: a)
++                    return
++                }
++            } else {
++                let scanner = Scanner(string: hexColor)
++                if scanner.scanHexInt64(&hexNumber) {
++                    r = CGFloat((hexNumber & 0xff0000) >> 16) / 255
++                    g = CGFloat((hexNumber & 0x00ff00) >> 8) / 255
++                    b = CGFloat((hexNumber & 0x0000ff)) / 255
++                    print(r,g,b)
++                    self.init(red: r, green: g, blue: b, alpha: 1)
++                    return
++                }
++            }
++        }
++
++        return nil
++    }
++}
+
+ @objcMembers
+ open class RNChartViewBase: UIView, ChartViewDelegate {
+@@ -26,6 +63,15 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
+
+     private  var syncY = false
+
++
++    var heightGradient : Int?
++
++    var gradientSettings: NSDictionary?
++
++    private var gradientPositions = [CGFloat]()
++
++    private var gradientColor = [UIColor]()
++
+     override open func reactSetFrame(_ frame: CGRect)
+     {
+         super.reactSetFrame(frame);
+@@ -42,10 +88,43 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
+         fatalError("subclass should override this function.")
+     }
+
++    func gradient(_ heightGradient: Int) {
++        if (gradientPositions.count == gradientColor.count) && gradientPositions.count > 0 {
++            let dataSet = chart.data?.dataSets[0] as? LineChartDataSet;
++            dataSet?.isDrawLineWithGradientEnabled = true
++            dataSet?.lineDashLengths = nil
++            dataSet?.highlightLineDashLengths = nil
++            dataSet?.setColors(gradientColor[0], gradientColor[1], gradientColor[2], gradientColor[3])
++            dataSet?.gradientPositions = gradientPositions
++        }
++
++    }
++
+     func setData(_ data: NSDictionary) {
+         let json = BridgeUtils.toJson(data)
+-
+         chart.data = dataExtract.extract(json)
++        if heightGradient != nil {
++            gradient(heightGradient!)
++        }
++    }
++
++
++    func setHeightGradient(_ config: NSDictionary) {
++        let json = BridgeUtils.toJson(config)
++        if json["height"].exists() {
++            self.heightGradient = json["height"].intValue
++        }
++        if json["colors"].exists() && json["positions"].exists() {
++            let colorsArray = json["colors"].arrayValue
++            let positionsArray = json["positions"].arrayValue
++            if colorsArray.count == positionsArray.count {
++                for i in 0..<colorsArray.count {
++                    gradientColor.append(UIColor(hex: colorsArray[i].stringValue)!)
++                    gradientPositions.append(CGFloat(positionsArray[i].intValue))
++                }
++            }
++        }
++        gradient(self.heightGradient!)
+     }
+
+     func setLegend(_ config: NSDictionary) {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift
+index 1774365..1f32665 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/RNYAxisChartViewBase.swift
+@@ -4,7 +4,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNYAxisChartViewBase: RNChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/BarDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/BarDataExtract.swift
+index 0240111..48af021 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/BarDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/BarDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class BarDataExtract : DataExtract {
+     override open func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartView.swift
+index ab6c548..3d13e0f 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNBarChartView: RNBarChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartViewBase.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartViewBase.swift
+index cce37ee..68d9159 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartViewBase.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNBarChartViewBase.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNBarChartViewBase: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNHorizontalBarChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNHorizontalBarChartView.swift
+index 8b4c268..2788315 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNHorizontalBarChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bar/RNHorizontalBarChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNHorizontalBarChartView: RNBarChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/BubbleDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/BubbleDataExtract.swift
+index 5db1941..bb5afe2 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/BubbleDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/BubbleDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class BubbleDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/RNBubbleChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/RNBubbleChartView.swift
+index 07d8f78..9694b86 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/RNBubbleChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/bubble/RNBubbleChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNBubbleChartView: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/CandleDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/CandleDataExtract.swift
+index 27dd1dd..5ade443 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/CandleDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/CandleDataExtract.swift
+@@ -4,7 +4,7 @@
+
+ import Foundation
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class CandleDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/RNCandleStickChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/RNCandleStickChartView.swift
+index 7dac34a..925a7f0 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/RNCandleStickChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/candlestick/RNCandleStickChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNCandleStickChartView: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/CombinedDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/CombinedDataExtract.swift
+index fdd3bed..3cc011c 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/CombinedDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/CombinedDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class CombinedDataExtract : DataExtract {
+     let lineDataExtract = LineDataExtract()
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/RNCombinedChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/RNCombinedChartView.swift
+index 2a5bb63..fc11f01 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/RNCombinedChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/combine/RNCombinedChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNCombinedChartView: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/ChartDateFormatter.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/ChartDateFormatter.swift
+index e78052b..433075b 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/ChartDateFormatter.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/ChartDateFormatter.swift
+@@ -7,7 +7,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+
+ open class ChartDateFormatter: NSObject, IValueFormatter, IAxisValueFormatter {
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/LargeValueFormatter.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/LargeValueFormatter.swift
+index 05d5839..60b8891 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/LargeValueFormatter.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/formatters/LargeValueFormatter.swift
+@@ -4,7 +4,7 @@
+ //  Copyright © 2016 dcg. All rights reserved.
+ //
+ import Foundation
+-import Charts
++import RNChartsGradient
+
+ open class LargeValueFormatter: NSObject, IValueFormatter, IAxisValueFormatter
+ {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/LineDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/LineDataExtract.swift
+index ff3aff3..977bb8c 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/LineDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/LineDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class LineDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
+index 3cb1160..2692503 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartManager.swift
+@@ -50,4 +50,6 @@ open class RNLineChartManager: RCTViewManager, RNBarLineChartBaseManager {
+     (self as RNBarLineChartBaseManager)._setDataAndLockIndex(reactTag, data: data)
+   }
+
++
++
+ }
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartView.swift
+index 703722a..6b45ce6 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/line/RNLineChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNLineChartView: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/PieDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/PieDataExtract.swift
+index a7880d9..b061441 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/PieDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/PieDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class PieDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/RNPieChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/RNPieChartView.swift
+index dfc35e0..4535189 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/RNPieChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/pie/RNPieChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNPieChartView: RNChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RNRadarChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RNRadarChartView.swift
+index d54757f..05a58de 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RNRadarChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RNRadarChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNRadarChartView: RNYAxisChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RadarDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RadarDataExtract.swift
+index 9d02f27..f61d8cd 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RadarDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/radar/RadarDataExtract.swift
+@@ -5,7 +5,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class RadarDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/RNScatterChartView.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/RNScatterChartView.swift
+index 59b9379..ad671e5 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/RNScatterChartView.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/RNScatterChartView.swift
+@@ -2,7 +2,7 @@
+ //  Copyright wuxudong
+ //
+
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class RNScatterChartView: RNBarLineChartViewBase {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/ScatterDataExtract.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/ScatterDataExtract.swift
+index 8cfee31..ef2f2da 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/ScatterDataExtract.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/scatter/ScatterDataExtract.swift
+@@ -9,7 +9,7 @@
+ import Foundation
+
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class ScatterDataExtract : DataExtract {
+     override func createData() -> ChartData {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/BridgeUtils.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/BridgeUtils.swift
+index 161d771..607fe2a 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/BridgeUtils.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/BridgeUtils.swift
+@@ -5,7 +5,7 @@
+
+ import Foundation
+ import SwiftyJSON
+-import Charts
++import RNChartsGradient
+
+ class BridgeUtils {
+     static func toIOSAlpha(_ alpha: NSNumber) -> CGFloat {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/ChartDataSetConfigUtils.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/ChartDataSetConfigUtils.swift
+index b373a74..7e82f3b 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/ChartDataSetConfigUtils.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/ChartDataSetConfigUtils.swift
+@@ -7,7 +7,7 @@
+ //
+
+ import UIKit
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/EntryToDictionaryUtils.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/EntryToDictionaryUtils.swift
+index 9b92b4f..c681617 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/EntryToDictionaryUtils.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/EntryToDictionaryUtils.swift
+@@ -7,7 +7,7 @@
+ //
+
+ import UIKit
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class EntryToDictionaryUtils: NSObject {
+diff --git a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/HighlightUtils.swift b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/HighlightUtils.swift
+index 4e230b2..dd199c1 100644
+--- a/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/HighlightUtils.swift
++++ b/node_modules/react-native-charts-wrapper/ios/ReactNativeCharts/utils/HighlightUtils.swift
+@@ -6,7 +6,7 @@
+ //
+
+ import Foundation
+-import Charts
++import RNChartsGradient
+ import SwiftyJSON
+
+ class HighlightUtils {

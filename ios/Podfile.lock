@@ -1,8 +1,5 @@
 PODS:
   - boost-for-react-native (1.63.0)
-  - Charts (3.3.0):
-    - Charts/Core (= 3.3.0)
-  - Charts/Core (3.3.0)
   - CocoaAsyncSocket (7.6.4)
   - CocoaLibEvent (1.0.0)
   - DoubleConversion (1.1.6)
@@ -300,9 +297,10 @@ PODS:
     - React-cxxreact (= 0.63.2)
     - React-jsi (= 0.63.2)
   - RNCharts (0.5.7):
-    - Charts (= 3.3.0)
     - React
+    - RNChartsGradient (= 1.6.0)
     - SwiftyJSON (= 5.0)
+  - RNChartsGradient (1.6.0)
   - SwiftyJSON (5.0.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -361,7 +359,6 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
-    - Charts
     - CocoaAsyncSocket
     - CocoaLibEvent
     - Flipper
@@ -372,6 +369,7 @@ SPEC REPOS:
     - Flipper-RSocket
     - FlipperKit
     - OpenSSL-Universal
+    - RNChartsGradient
     - SwiftyJSON
     - YogaKit
 
@@ -433,7 +431,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  Charts: e0dd4cd8f257bccf98407b58183ddca8e8d5b578
   CocoaAsyncSocket: 694058e7c0ed05a9e217d1b3c7ded962f4180845
   CocoaLibEvent: 2fab71b8bd46dd33ddb959f7928ec5909f838e3f
   DoubleConversion: cde416483dac037923206447da6e1454df403714
@@ -469,7 +466,8 @@ SPEC CHECKSUMS:
   React-RCTText: 1b6773e776e4b33f90468c20fe3b16ca3e224bb8
   React-RCTVibration: 4d2e726957f4087449739b595f107c0d4b6c2d2d
   ReactCommon: a0a1edbebcac5e91338371b72ffc66aa822792ce
-  RNCharts: d364ca2085e24edb9ee0390d3fb7209257daa44c
+  RNCharts: 54f0e357dcc266fe5d9858ee83d5c0f3468989f2
+  RNChartsGradient: 898bbd9e2fcde845b3618ddaef998c327cfdfd41
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   Yoga: 7740b94929bbacbddda59bf115b5317e9a161598
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a

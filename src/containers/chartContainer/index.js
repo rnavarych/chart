@@ -1,12 +1,11 @@
 import React from 'react';
-import {View, Text, Platform, TouchableOpacity} from 'react-native';
+import {View, Platform} from 'react-native';
 import {DIRECTION_LEFT, DIRECTION_RIGHT, ERROR_COEFFICIENT, OFFSET} from '../../constants/charConst';
 import styles from './styles';
 import {mockBloodGlucose} from '../../utils/mock';
 import GradientChart from '../../components/gradientChar';
 import BottomChartModal from '../../components/bottomChartModal';
 import {dataByWeek, descriptionDate} from '../../utils/utils';
-import ChartDateSwitcher from '../../components/chartDateSwithcher';
 
 /**
  * bloodGlucose - list of values (change to props.data mb)
@@ -18,7 +17,7 @@ function ChartContainer(props) {
   const [page, setPage] = React.useState(1);
   const [direction, setDirection] = React.useState('left');
 
-  const dateByWeek = React.useMemo(() => dataByWeek(mockBloodGlucose), [mockBloodGlucose]);
+  const dateByWeek = React.useMemo(() => dataByWeek(mockBloodGlucose(62, 3)), [mockBloodGlucose]);
   const [rightIndex, setRightIndex] = React.useState(dateByWeek.length - 1);
   const [leftIndex, setLeftIndex] = React.useState(dateByWeek.length - 1);
   const [data, setData] = React.useState(dateByWeek[leftIndex]);
@@ -48,8 +47,14 @@ function ChartContainer(props) {
     }
   }, [data, rightIndex, page]);
 
+  const scrollToEnd = React.useCallback(() => {
+    setTimeout(() => {
+      !!char && char.moveViewToX(data.length);
+    }, 50);
+  }, [char, data]);
+
   React.useEffect(() => {
-    char?.moveViewToX(data.length);
+    scrollToEnd()
   }, [char]);
 
   React.useEffect(() => {
@@ -106,8 +111,8 @@ function ChartContainer(props) {
     setLeftIndex(leftIndex + 1);
     setRightIndex(rightIndex + 1);
     setDateDescription(descriptionDate(date[0].end_time, date[date.length - 1].end_time));
-
-  }, [rightIndex, leftIndex, data]);
+    scrollToEnd();
+  }, [rightIndex, leftIndex, data, char]);
 
   const showPrevPage = React.useCallback(() => {
     let date = dateByWeek[leftIndex - 1];
@@ -115,17 +120,15 @@ function ChartContainer(props) {
     setLeftIndex(leftIndex - 1);
     setRightIndex(rightIndex - 1);
     setDateDescription(descriptionDate(date[0].end_time, date[date.length - 1].end_time));
-  }, [rightIndex, leftIndex, data]);
+    scrollToEnd();
+  }, [rightIndex, leftIndex, data, char]);
 
   return (
     <View style={ styles.container }>
-      <ChartDateSwitcher
-        title={ dateDescription }
+      <GradientChart
+        dateDescription={ dateDescription }
         nextDate={ dateByWeek.length > rightIndex + 1 ? showNextPage : null }
         prevDate={ leftIndex - 1 > 0 ? showPrevPage : null }
-      />
-      <GradientChart
-        containerStyle={ styles.chartContainer }
         data={ data }
         setRef={ setChar }
         charRef={ char }
@@ -135,7 +138,7 @@ function ChartContainer(props) {
         direction={ direction }
       />
       <BottomChartModal
-        errorScroll={errorScroll}
+        errorScroll={ errorScroll }
         listRef={ setListRef }
         modalHeight={ 200 }
         duration={ 500 }
