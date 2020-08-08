@@ -21,26 +21,24 @@ function ChartContainer(props) {
   const [rightIndex, setRightIndex] = React.useState(dateByWeek.length - 1);
   const [leftIndex, setLeftIndex] = React.useState(dateByWeek.length - 1);
   const [data, setData] = React.useState(dateByWeek[leftIndex]);
-  const [dateDescription, setDateDescription] = React.useState(descriptionDate(data[0].end_time, data[data.length - 1].end_time));
+  const [dateDescription, setDateDescription] = React.useState(descriptionDate(data[0].end_time, data[5].end_time));
 
-  const prevWeek = React.useCallback((newDate = false) => {
+  const prevWeek = React.useCallback(() => {
     if (leftIndex > 0 && dateByWeek.length > leftIndex - 1) {
       let prevWeek = dateByWeek[leftIndex - 1];
-      newDate ? setData([...prevWeek]) : setData([...prevWeek, ...data]);
+      setData([...prevWeek, ...data]);
       if (prevWeek.length > 0) {
-        setDateDescription(descriptionDate(prevWeek[0].end_time, data[data.length - 1].end_time));
         setLeftIndex(leftIndex - 1);
         setPage(page + 1);
       }
     }
   }, [data, leftIndex, page]);
 
-  const nextWeek = React.useCallback((newDate = false) => {
+  const nextWeek = React.useCallback(() => {
     if (dateByWeek.length > rightIndex + 1) {
       let nextWeek = dateByWeek[rightIndex + 1];
-      newDate ? setData(...nextWeek) : setData([...data, ...nextWeek]);
+      setData([...data, ...nextWeek]);
       if (nextWeek.length > 0) {
-        setDateDescription(descriptionDate(data[0].end_time, nextWeek[nextWeek.length - 1].end_time));
         setRightIndex(rightIndex + 1);
         setPage(page + 1);
       }
@@ -57,15 +55,11 @@ function ChartContainer(props) {
     scrollToEnd()
   }, [char]);
 
-  React.useEffect(() => {
-    // setDateDescription(descriptionDate(data[0].end_time, data[data.length - 1].end_time))
-  }, [data]);
-
-  const handleSelect = ({nativeEvent}) => {
+  const handleSelect = React.useCallback(({nativeEvent}) => {
     if (!!nativeEvent.data && listRef?.props.data?.length > 0) {
       listRef?.scrollToIndex({animated: true, index: nativeEvent.data.x - 1});
     }
-  };
+  }, [listRef]);
 
   const onChange = React.useCallback(({nativeEvent}) => {
     const leftPagination = () => {
@@ -86,12 +80,13 @@ function ChartContainer(props) {
     if (Platform.OS === 'android') {
       if (nativeEvent.action === 'chartGestureEnd') {
         if (left <= OFFSET) {
-          leftPagination();
+          leftPagination(left);
         } else if (right >= data.length + OFFSET) {
-          rightPagination();
+          rightPagination(right);
         }
       }
     } else {
+      setDateDescription(descriptionDate(data[Math.round(left)]?.end_time, data[Math.round(right)]?.end_time))
       if (left >= OFFSET - ERROR_COEFFICIENT && left <= OFFSET + ERROR_COEFFICIENT) {
         leftPagination();
       } else if (right >= data.length + OFFSET - ERROR_COEFFICIENT) {
@@ -125,25 +120,27 @@ function ChartContainer(props) {
 
   return (
     <View style={ styles.container }>
-      <GradientChart
-        dateDescription={ dateDescription }
-        nextDate={ dateByWeek.length > rightIndex + 1 ? showNextPage : null }
-        prevDate={ leftIndex - 1 > 0 ? showPrevPage : null }
-        data={ data }
-        setRef={ setChar }
-        charRef={ char }
-        handleSelect={ handleSelect }
-        onChange={ onChange }
-        page={ page }
-        direction={ direction }
-      />
-      <BottomChartModal
-        errorScroll={ errorScroll }
-        listRef={ setListRef }
-        modalHeight={ 200 }
-        duration={ 500 }
-        content={ data }
-      />
+        <GradientChart
+          dateDescription={ dateDescription }
+          nextDate={ dateByWeek.length > rightIndex + 1 ? showNextPage : null }
+          prevDate={ leftIndex - 1 > 0 ? showPrevPage : null }
+          data={ data }
+          setRef={ setChar }
+          charRef={ char }
+          handleSelect={ handleSelect }
+          onChange={ onChange }
+          page={ page }
+          direction={ direction }
+        />
+        <BottomChartModal
+          errorScroll={ errorScroll }
+          listRef={ setListRef }
+          modalHeight={ 200 }
+          duration={ 500 }
+          content={ data }
+        />
+
+
     </View>
   );
 }

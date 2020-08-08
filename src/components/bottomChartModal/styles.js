@@ -2,10 +2,10 @@ import {StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
   modalContainer: {
-    flex: 0.6,
     backgroundColor: 'white',
     borderTopRightRadius: 30,
     borderTopLeftRadius: 30,
+position: 'absolute', bottom: 120,height: 300, width: '100%'
   },
   touchArea: {
     height: 40,

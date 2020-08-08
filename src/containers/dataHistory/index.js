@@ -1,9 +1,8 @@
 import React, {useState, useCallback, Suspense} from 'react';
 import {View, Text} from 'react-native';
 
-import ControlsPanel from './controls';
 
-import {CHART_INTERVALS, CHART_TYPES} from '../../constants';
+import {CHART_INTERVALS, CHART_TYPES} from '../../constants/charConst';
 
 import styles from './styles';
 
@@ -12,8 +11,7 @@ const BloodPressure = React.lazy(() => import('../bloodPressure'));
 
 export default () => {
   const [interval, setInterval] = useState(CHART_INTERVALS[0]);
-  const [type, setType] = useState(CHART_TYPES[3]);
-
+  const [type, setType] = useState(CHART_TYPES[3].type);
   const onIntervalChange = useCallback(
     (selected) => {
       setInterval(selected);
@@ -23,6 +21,8 @@ export default () => {
 
   const onTypeChange = useCallback(
     (selected) => {
+      console.log(selected)
+
       setType(selected);
     },
     [setType],
@@ -30,14 +30,14 @@ export default () => {
 
   let content = null;
   switch (type) {
-    case CHART_TYPES[3]:
+    case CHART_TYPES[3].type:
       content = (
         <Suspense fallback={<Text style={styles.placeholder}>Loading...</Text>}>
           <BloodPressure interval={interval} />
         </Suspense>
       );
       break;
-    case CHART_TYPES[4]:
+    case CHART_TYPES[4].type:
       content = (
         <Suspense fallback={<Text style={styles.placeholder}>Loading...</Text>}>
           <BloodGlucose />

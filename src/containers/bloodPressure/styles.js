@@ -4,7 +4,6 @@ export default StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: 'violet',
   },
   card: {
     height: 360,

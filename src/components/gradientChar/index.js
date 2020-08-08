@@ -70,6 +70,48 @@ function GradientChart(props) {
     textColor: processColor('black'),
   };
 
+  const dataSwitcherContainer = React.useMemo(() => (
+    <ChartDateSwitcher
+      containerStyle={ styles.cardHeader }
+      title={ dateDescription }
+      nextDate={ nextDate }
+      prevDate={ prevDate }
+    />
+  ), [dateDescription]);
+
+  const chartContainer = React.useMemo(() => (
+    <LineChart
+      visibleRange={ {x: {min: 6, max: 6}} }
+      maxVisibleValueCount={ 6 }
+      marker={ marker }
+      ref={ setRef }
+      xAxis={ xAxis }
+      yAxis={ yAxis }
+      heightGradient={ {
+        height: MAX_Y,
+        colors: ['#f54336', '#8bc34a', '#feeb39', '#f54336'],
+        positions: [0, 69, 180, 240],
+      } }
+      style={ styles.chart }
+      data={ chartData }
+      touchEnabled={ true }
+      dragEnabled={ true }
+      scaleEnabled={ false }
+      scaleXEnabled={ false }
+      scaleYEnabled={ false }
+      pinchZoom={ false }
+      chartDescription={ {text: ''} }
+      onSelect={ handleSelect }
+      onChange={ onChange }
+      zoom={ zoom(data, page, direction) }
+      dragDecelerationEnabled={ false }
+      dragDecelerationFrictionCoef={ 0.99 }
+      legend={ {
+        enabled: false,
+      } }
+    />
+  ), [data]);
+
   return (
     <View style={ {
       flex: 1,
@@ -78,53 +120,8 @@ function GradientChart(props) {
       <View style={ styles.card }>
         <View style={ styles.cardHeaderWorkaround }/>
         <Text style={ styles.cardFooterWorkaround }>1</Text>
-        <ChartDateSwitcher
-          containerStyle={ styles.cardHeader }
-          title={ dateDescription }
-          nextDate={ nextDate }
-          prevDate={ prevDate }
-        />
-        <LineChart
-          visibleRange={ {x: {min: 6, max: 6}} }
-          maxVisibleValueCount={ 6 }
-          marker={ marker }
-          ref={ setRef }
-          xAxis={ xAxis }
-          yAxis={ yAxis }
-          heightGradient={ {
-            height: MAX_Y,
-            colors: ['#f54336', '#8bc34a', '#feeb39', '#f54336'],
-            positions: [0, 69, 180, 240],
-          } }
-          style={ styles.chart }
-          data={ Platform.OS === 'ios' ? chartData : {
-            dataSets: [{
-              values: generateCharValues(data),
-              label: '',
-              config: {
-                mode: 'HORIZONTAL_BEZIER',
-                drawValues: false,
-                drawCircles: false,
-                lineWidth: 2,
-              },
-            }],
-          } }
-          touchEnabled={ true }
-          dragEnabled={ true }
-          scaleEnabled={ false }
-          scaleXEnabled={ false }
-          scaleYEnabled={ false }
-          pinchZoom={ false }
-          chartDescription={ {text: ''} }
-          onSelect={ handleSelect }
-          onChange={ onChange }
-          zoom={ zoom(data, page, direction) }
-          dragDecelerationEnabled={ Platform.OS === 'ios' }
-          dragDecelerationFrictionCoef={ 0.9 }
-          legend={ {
-            enabled: false,
-          } }
-        />
+        {dataSwitcherContainer}
+        {chartContainer}
       </View>
     </View>
   );

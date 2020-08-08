@@ -1,4 +1,5 @@
 import {StyleSheet} from 'react-native';
+import { HORIZONTAL_PADDING } from '../../main/home/constants';
 
 export default StyleSheet.create({
   container: {
@@ -38,4 +39,8 @@ export default StyleSheet.create({
   textSelected: {
     color: 'purple',
   },
+  addNewMeasurement: {
+    alignSelf: 'flex-end',
+    marginRight: HORIZONTAL_PADDING,
+  }
 });

@@ -31,7 +31,7 @@ export const zoom = (data, page, direction) => {
 export const dataByWeek = (bloodGlucose) => {
   let allWeeks = [];
   let weeks = [];
-  let week = 30;
+  let week = 0;
   let isLastItemPerDate = false;
   bloodGlucose.map((item) => {
     if (isLastItemPerDate) {

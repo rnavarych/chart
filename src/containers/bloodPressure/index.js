@@ -3,7 +3,7 @@ import {Text, View, processColor, Platform} from 'react-native';
 
 import {LineChart} from 'react-native-charts-wrapper';
 
-import {CHART_INTERVALS} from '../../constants';
+import {CHART_INTERVALS} from '../../constants/charConst';
 
 import {fetchBloodPressureData} from '../../utils/mock';
 import {sortBloodPressureData} from '../../utils/utils';

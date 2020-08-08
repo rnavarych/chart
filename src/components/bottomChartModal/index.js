@@ -38,6 +38,7 @@ function BottomChartModal(props) {
       </TouchableOpacity>
       <FlatList
         onScrollToIndexFailed={ errorScroll }
+        style={{marginBottom: 70}}
         ref={listRef}
         data={!modalVisible ? content : null}
         keyExtractor={ (i, index) => String(index) }
