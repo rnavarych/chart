@@ -16,7 +16,22 @@ export default StyleSheet.create({
   cardHeader: {
     height: 40,
     width: '100%',
+    flexDirection: 'row',
+    paddingTop: 10,
+    paddingHorizontal: '25%',
     backgroundColor: '#f4f5f8',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  arrow: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'pink',
+  },
+  opacity: {
+    backgroundColor: 'grey',
+    opacity: 0.2,
   },
   cardHeaderWorkaround: {
     position: 'absolute',

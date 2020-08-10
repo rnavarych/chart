@@ -1,5 +1,11 @@
 import React from 'react';
-import {Text, View, processColor, Platform} from 'react-native';
+import {
+  Text,
+  View,
+  processColor,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
 
 import {LineChart} from 'react-native-charts-wrapper';
 
@@ -7,14 +13,17 @@ import {
   CHART_INTERVALS,
   CHART_BLOOD_PRESSURE_MIN_Y,
   CHART_BLOOD_PRESSURE_MAX_Y,
+  DAYS_NUMBER_FOR_INTERVAL,
 } from '../../constants';
 
+import * as configs from './config';
+
 import {fetchBloodPressureDataForDays} from '../../utils/mock';
-import {sortBloodPressureData} from '../../utils/utils';
+import {fillDaysDataWithBearingItemsAndSort, sameDate} from '../../utils/utils';
 
 import styles from './styles';
 
-const getDataItemConfig = (color, colors) => ({
+const getDataItemConfig = (isBearing, color, colors) => ({
   lineWidth: 2,
   drawValues: false,
   circleRadius: Platform.OS === 'ios' ? 6 : 5,
@@ -22,6 +31,11 @@ const getDataItemConfig = (color, colors) => ({
   drawHighlightIndicators: true,
   color: processColor(color),
   circleColors: [processColor(colors[0]), processColor(colors[1])],
+  mode: 'HORIZONTAL_BEZIER',
+  circleHoleColor: isBearing
+    ? processColor('transparent')
+    : processColor('white'),
+  highlightColor: isBearing ? processColor('transparent') : undefined,
 });
 
 class BloodPressureFragment extends React.Component {
@@ -29,82 +43,156 @@ class BloodPressureFragment extends React.Component {
     super(props);
 
     this.state = {
+      interval: '',
+      zero: 0,
       data: {},
+      left: null,
+      right: null,
     };
+
+    this.onChartViewChange = this.onChartViewChange.bind(this);
+    this.handleLeftPress = this.handleLeftPress.bind(this);
+    this.handleRightPress = this.handleRightPress.bind(this);
   }
 
   componentDidMount() {
     setTimeout(() => {
-      fetchBloodPressureDataForDays().then((data) => {
-        const sorted = sortBloodPressureData(data);
+      fetchBloodPressureDataForDays(DAYS_NUMBER_FOR_INTERVAL.DAY).then(
+        (data) => {
+          const sorted = fillDaysDataWithBearingItemsAndSort(
+            data,
+            DAYS_NUMBER_FOR_INTERVAL.DAY,
+          );
 
-        let inc = 0;
+          const res = sorted.map((item) => ({
+            values: [
+              {
+                x: item.index,
+                y: item.value[0],
+                marker: item.bearing ? '' : undefined,
+              },
+              {
+                x: item.index,
+                y: item.value[1],
+                marker: item.bearing ? '' : undefined,
+              },
+            ],
+            label: '',
+            config: getDataItemConfig(item.bearing, item.color, item.colors),
+          }));
 
-        const res = sorted.map((item) => ({
-          values: [
-            {x: ++inc, y: item.value[0]},
-            {x: inc, y: item.value[1]},
-          ],
-          label: '',
-          config: getDataItemConfig(item.color, item.colors),
-        }));
+          const formatter = sorted.map((item) => item.label);
 
-        res.push({
-          values: [{x: ++inc, y: 40}],
-          label: '',
-          config: getDataItemConfig('transparent', [
-            'transparent',
-            'transparent',
-          ]),
-        });
-
-        this.setState({
-          data: {
-            dataSets: res,
-          },
-        });
-      });
+          this.setState(
+            {
+              data: {
+                dataSets: res,
+              },
+              interval: 'Today',
+              zero: sorted[0].time,
+              right: null,
+              left: 1440 * (DAYS_NUMBER_FOR_INTERVAL.DAY - 2),
+              // formatter,
+            },
+            () => {
+              setTimeout(() => {
+                this.chartRef.moveViewToX(
+                  1440 * (DAYS_NUMBER_FOR_INTERVAL.DAY - 1),
+                );
+              }, 0);
+            },
+          );
+        },
+      );
     }, 1000);
+  }
+
+  onChartViewChange(event) {
+    if (
+      event &&
+      event.nativeEvent &&
+      event.nativeEvent.left !== undefined &&
+      event.nativeEvent.right !== undefined
+    ) {
+      const now = new Date();
+      let left = new Date(
+        this.state.zero + Math.floor(event.nativeEvent.left + 10) * 60 * 1000,
+      );
+      let right = new Date(
+        this.state.zero + Math.floor(event.nativeEvent.right - 10) * 60 * 1000,
+      );
+
+      left = sameDate(now, left)
+        ? 'Today'
+        : `${left.getDate()}.${left.getMonth() + 1}`;
+      right = sameDate(now, right)
+        ? 'Today'
+        : `${right.getDate()}.${right.getMonth() + 1}`;
+
+      const result = left === right ? `${left}` : `${left} - ${right}`;
+      if (result !== this.state.interval) {
+        this.setState({interval: result}); // todo add setting new left right values
+      }
+    }
+  }
+
+  handleLeftPress() {
+    if (this.state.left !== null && this.chartRef) {
+      this.chartRef.moveViewToX(this.state.left);
+    }
+  }
+
+  handleRightPress() {
+    if (this.state.right !== null && this.chartRef) {
+      this.chartRef.moveViewToX(this.state.right);
+    }
   }
 
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.card}>
-          <View style={styles.cardHeader} />
+          <View style={styles.cardHeader}>
+            <TouchableOpacity
+              style={[
+                styles.arrow,
+                this.state.left === null ? styles.opacity : null,
+              ]}
+              onPress={this.handleLeftPress}
+              disabled={this.state.left === null}
+            />
+            <Text>{this.state.interval}</Text>
+            <TouchableOpacity
+              style={[
+                styles.arrow,
+                this.state.right === null ? styles.opacity : null,
+              ]}
+              onPress={this.handleRightPress}
+              disabled={this.state.right === null}
+            />
+          </View>
           <View style={styles.cardHeaderWorkaround} />
-          <Text style={styles.cardFooterWorkaround}>1</Text>
+          <Text style={styles.cardFooterWorkaround}>{'1\nA'}</Text>
           <LineChart
             style={styles.chart}
             data={this.state.data}
-            legend={{enabled: false}}
-            marker={{
-              enabled: true,
-              markerColor: processColor('#f4f5f8'),
-              textColor: processColor('#8093b0'),
-            }}
-            chartDescription={{text: ''}}
-            yAxis={{
-              left: {
-                enabled: false,
-              },
-              right: {
-                axisMaximum: CHART_BLOOD_PRESSURE_MAX_Y,
-                axisMinimum: CHART_BLOOD_PRESSURE_MIN_Y,
-                drawAxisLine: false,
-                drawAxisLines: false,
-                labelCount: 7,
-                gridColor: processColor('rgba(128, 147, 176, 0.2)'),
-                textSize: 10,
-                textColor: processColor('#8093b0'),
-              },
-            }}
+            scaleEnabled={false}
+            scaleXEnabled={false}
+            scaleYEnabled={false}
+            pinchZoom={false}
+            visibleRange={configs.visibleRangeConfig}
+            legend={configs.legengConfig}
+            marker={configs.markerConfig}
+            chartDescription={configs.chartDescription}
+            yAxis={configs.yAxisConfig}
             xAxis={{
-              position: 'BOTTOM',
-              textSize: 10,
-              textColor: processColor('#8093b0'),
-              gridColor: processColor('transparent'),
+              ...configs.xAxisConfig,
+              valueFormatter: this.state.formatter,
             }}
+            ref={(ref) => {
+              this.chartRef = ref;
+            }}
+            onChange={this.onChartViewChange}
           />
         </View>
       </View>

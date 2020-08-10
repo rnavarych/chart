@@ -25,10 +25,10 @@ export const mockBloodGlucose = (countDays = 1, countPerDay = 4) => {
     }
   }
   return result.reverse();
-}
+};
 
-export const fetchBloodPressureDataForDays = () => {
-  return fetchBloodPressureData(7, 6);
+export const fetchBloodPressureDataForDays = (days) => {
+  return fetchBloodPressureData(days, 6);
 };
 
 const fetchBloodPressureData = (days, daxPerDay) => {
@@ -38,6 +38,18 @@ const fetchBloodPressureData = (days, daxPerDay) => {
   });
 };
 
+/*
+  it will return an array of this king of items:
+  {
+    id: number[2];
+    color: string; // worst value color; will be used for drawing line
+    colors: string[2];
+    time: number; // timestamp of event
+    type: string;
+    unit: string;
+    value: number[2];
+  }
+*/
 const mockBloodPressure = (countDays = 1, maxPerDay = 2) => {
   const result = [];
 
@@ -59,7 +71,7 @@ const mockBloodPressure = (countDays = 1, maxPerDay = 2) => {
         time: date.getTime(),
         type: 'blood_pressure',
         unit: 'mmHg',
-        value: [getRandomInt(30) + 40, getRandomInt(145) + 75],
+        value: [getRandomInt(30) + 50, getRandomInt(125) + 75],
       });
     }
   }
