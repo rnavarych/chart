@@ -23,6 +23,11 @@ import {fillDaysDataWithBearingItemsAndSort, sameDate} from '../../utils/utils';
 
 import styles from './styles';
 
+const MINUTES_PER_DAY = 1440;
+const MILLIS_PER_MINUTE = 60000;
+
+const CHART_ERROR = 10; // 10 minutes error is necessary to prevent showing wrong values as chart X axis numbers are decimal
+
 const getDataItemConfig = (isBearing, color, colors) => ({
   lineWidth: 2,
   drawValues: false,
@@ -81,7 +86,7 @@ class BloodPressureFragment extends React.Component {
             config: getDataItemConfig(item.bearing, item.color, item.colors),
           }));
 
-          const formatter = sorted.map((item) => item.label);
+          // const formatter = sorted.map((item) => item.label);
 
           this.setState(
             {
@@ -91,13 +96,13 @@ class BloodPressureFragment extends React.Component {
               interval: 'Today',
               zero: sorted[0].time,
               right: null,
-              left: 1440 * (DAYS_NUMBER_FOR_INTERVAL.DAY - 2),
+              left: MINUTES_PER_DAY * (DAYS_NUMBER_FOR_INTERVAL.DAY - 2),
               // formatter,
             },
             () => {
               setTimeout(() => {
                 this.chartRef.moveViewToX(
-                  1440 * (DAYS_NUMBER_FOR_INTERVAL.DAY - 1),
+                  MINUTES_PER_DAY * (DAYS_NUMBER_FOR_INTERVAL.DAY - 1),
                 );
               }, 0);
             },
@@ -108,30 +113,51 @@ class BloodPressureFragment extends React.Component {
   }
 
   onChartViewChange(event) {
-    if (
-      event &&
-      event.nativeEvent &&
-      event.nativeEvent.left !== undefined &&
-      event.nativeEvent.right !== undefined
-    ) {
+    if (event?.nativeEvent?.left != null && event?.nativeEvent?.right != null) {
+      const {left, right} = event.nativeEvent;
+
       const now = new Date();
-      let left = new Date(
-        this.state.zero + Math.floor(event.nativeEvent.left + 10) * 60 * 1000,
-      );
-      let right = new Date(
-        this.state.zero + Math.floor(event.nativeEvent.right - 10) * 60 * 1000,
-      );
 
-      left = sameDate(now, left)
-        ? 'Today'
-        : `${left.getDate()}.${left.getMonth() + 1}`;
-      right = sameDate(now, right)
-        ? 'Today'
-        : `${right.getDate()}.${right.getMonth() + 1}`;
+      let leftX = null;
+      if (left % MINUTES_PER_DAY === 0) {
+        leftX = left === 0 ? null : left - MINUTES_PER_DAY;
+      } else if (left % MINUTES_PER_DAY < CHART_ERROR) {
+        leftX =
+          Math.floor(left / MINUTES_PER_DAY) * MINUTES_PER_DAY -
+          MINUTES_PER_DAY;
+        leftX = leftX < 0 ? null : leftX;
+      } else {
+        leftX = Math.floor(left / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+      }
 
-      const result = left === right ? `${left}` : `${left} - ${right}`;
-      if (result !== this.state.interval) {
-        this.setState({interval: result}); // todo add setting new left right values
+      let rightX =
+        Math.floor(left / MINUTES_PER_DAY) * MINUTES_PER_DAY + MINUTES_PER_DAY;
+      rightX =
+        rightX > (DAYS_NUMBER_FOR_INTERVAL.DAY - 1) * MINUTES_PER_DAY
+          ? null
+          : rightX;
+
+      let intervalStart = new Date(
+        this.state.zero + Math.floor(left) * MILLIS_PER_MINUTE,
+      );
+      intervalStart = sameDate(now, intervalStart)
+        ? 'Today'
+        : `${intervalStart.getDate()}.${intervalStart.getMonth() + 1}`; // TODO: add 'moment' formatting here
+
+      let intervalEnd = new Date(
+        this.state.zero + Math.floor(right - CHART_ERROR) * MILLIS_PER_MINUTE,
+      );
+      intervalEnd = sameDate(now, intervalEnd)
+        ? 'Today'
+        : `${intervalEnd.getDate()}.${intervalEnd.getMonth() + 1}`; // TODO: add 'moment' formatting here
+
+      const interval =
+        intervalStart === intervalEnd
+          ? `${intervalStart}`
+          : `${intervalStart} - ${intervalEnd}`;
+
+      if (interval !== this.state.interval) {
+        this.setState({interval, left: leftX, right: rightX});
       }
     }
   }
@@ -139,12 +165,24 @@ class BloodPressureFragment extends React.Component {
   handleLeftPress() {
     if (this.state.left !== null && this.chartRef) {
       this.chartRef.moveViewToX(this.state.left);
+      this.onChartViewChange({
+        nativeEvent: {
+          left: this.state.left,
+          right: this.state.left + MINUTES_PER_DAY,
+        },
+      });
     }
   }
 
   handleRightPress() {
     if (this.state.right !== null && this.chartRef) {
       this.chartRef.moveViewToX(this.state.right);
+      this.onChartViewChange({
+        nativeEvent: {
+          left: this.state.right,
+          right: this.state.right + MINUTES_PER_DAY,
+        },
+      });
     }
   }
 

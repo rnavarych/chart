@@ -30,8 +30,7 @@ export default StyleSheet.create({
     backgroundColor: 'pink',
   },
   opacity: {
-    backgroundColor: 'grey',
-    opacity: 0.2,
+    backgroundColor: 'rgba(180, 180, 180, 0.3)',
   },
   cardHeaderWorkaround: {
     position: 'absolute',
